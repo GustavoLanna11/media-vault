@@ -1,0 +1,31 @@
+{
+  "vaults": [
+    {
+      "id": "a5d6b7fb-9018-4656-ac71-af2dc25d41df",
+      "vault_code": "60315588",
+      "pin_hash": "pbkdf2:ebd328fbf51f4b45a7711a9c31976f9d:fdf89dc5a85b4e6d3efd7f4ec1b13c88f871656917e2fb8a69da1d4f76701409",
+      "created_at": "2026-10-13T19:34:36.704Z",
+      "updated_at": "2026-10-13T19:34:36.704Z"
+    }
+  ],
+  "movies": [],
+  "series": [],
+  "books": [],
+  "games": [
+    {
+      "title": "Bioshock",
+      "rating": 5,
+      "cover_url": null,
+      "description": null,
+      "notes": "Melhor jogo da minha vida. O jogo é FODA em todos os aspectos: gameplay, ambientação, músicas, personagens, plot twist e história num geral.\n\nMomento mais marcante creio que foi a obra, o masterpiece na metade do jogo.",
+      "platform": "PS4",
+      "status": "platinum",
+      "vault_id": "a5d6b7fb-9018-4656-ac71-af2dc25d41df",
+      "created_at": "2026-10-13T19:37:27.039Z",
+      "updated_at": "2026-10-13T19:37:27.039Z",
+      "id": "12965dd9-29eb-4985-984f-94a1b7822712"
+    }
+  ],
+  "albums": [],
+  "tracks": []
+}
