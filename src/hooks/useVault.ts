@@ -21,6 +21,7 @@ import {
   generateSyncId,
   uploadToCloud,
   downloadFromCloud,
+  CloudSyncError,
   UPDATED_AT_KEY,
   type SyncStatus,
 } from '../lib/sync'
@@ -74,14 +75,29 @@ export function useVault(): UseVaultReturn {
 
     setSyncStatus('syncing')
     try {
-      const now = new Date().toISOString()
-      await uploadToCloud(syncId, raw, salt)
-      localStorage.setItem(UPDATED_AT_KEY, now)
+      const updatedAt = await uploadToCloud(syncId, raw, salt)
+      localStorage.setItem(UPDATED_AT_KEY, updatedAt)
       setSyncStatus('synced')
-    } catch {
+    } catch (err) {
+      console.warn('Falha ao sincronizar na nuvem:', err)
       setSyncStatus('error')
+      throw err
     }
   }, [])
+
+  const ensureCloudRegistration = useCallback(
+    async (salt: string): Promise<string | null> => {
+      if (!isCloudEnabled()) return null
+      let syncId = getSyncId()
+      if (!syncId) {
+        syncId = generateSyncId()
+        setSyncId(syncId)
+      }
+      await syncToCloud(salt)
+      return syncId
+    },
+    [syncToCloud],
+  )
 
   const pullFromCloudIfNewer = useCallback(async (): Promise<boolean> => {
     if (!isCloudEnabled()) return false
@@ -90,8 +106,6 @@ export function useVault(): UseVaultReturn {
 
     try {
       const cloud = await downloadFromCloud(syncId)
-      if (!cloud) return false
-
       const localUpdated = localStorage.getItem(UPDATED_AT_KEY)
       if (!localUpdated || cloud.updatedAt > localUpdated) {
         localStorage.setItem('media_vault_encrypted', cloud.payload)
@@ -99,7 +113,8 @@ export function useVault(): UseVaultReturn {
         localStorage.setItem(UPDATED_AT_KEY, cloud.updatedAt)
         return true
       }
-    } catch {
+    } catch (err) {
+      console.warn('Falha ao puxar dados da nuvem:', err)
       setSyncStatus('error')
     }
     return false
@@ -110,7 +125,11 @@ export function useVault(): UseVaultReturn {
       const { pinHash, salt, ...data } = newState
       await saveEncrypted(JSON.stringify(data), currentPin, salt!)
       setState(newState)
-      await syncToCloud(salt!)
+      try {
+        await syncToCloud(salt!)
+      } catch {
+        // Dados já salvos localmente; status de sync tratado em syncToCloud
+      }
     },
     [syncToCloud]
   )
@@ -169,10 +188,20 @@ export function useVault(): UseVaultReturn {
       )
 
       if (isCloudEnabled()) {
-        const syncId = generateSyncId()
-        setSyncId(syncId)
-        await syncToCloud(salt)
-        setPendingSyncCode(syncId)
+        try {
+          const syncId = await ensureCloudRegistration(salt)
+          if (syncId) setPendingSyncCode(syncId)
+        } catch (err) {
+          if (err instanceof CloudSyncError && err.reason === 'not_configured') {
+            setError(
+              'Cofre criado localmente, mas a nuvem não está configurada neste servidor.',
+            )
+          } else {
+            setError(
+              'Cofre criado localmente, mas não foi possível sincronizar na nuvem. Confira o Supabase e tente novamente em Ajustes.',
+            )
+          }
+        }
       }
 
       await createSessionKey(newPin, salt)
@@ -191,15 +220,18 @@ export function useVault(): UseVaultReturn {
     setIsLoading(true)
     setError(null)
     try {
-      const cloud = await downloadFromCloud(inputSyncId.trim())
-      if (!cloud) {
-        setError('Código de sync não encontrado na nuvem.')
+      if (!isCloudEnabled()) {
+        setError(
+          'Sincronização na nuvem indisponível neste endereço. Use o mesmo link/servidor do PC (com Supabase configurado).',
+        )
         return false
       }
 
+      const cloud = await downloadFromCloud(inputSyncId.trim())
+
       const decrypted = await decryptData(cloud.payload, inputPin, cloud.salt)
       if (!decrypted) {
-        setError('Código ou PIN incorreto.')
+        setError('PIN incorreto para este cofre.')
         return false
       }
 
@@ -224,8 +256,24 @@ export function useVault(): UseVaultReturn {
       setIsLocked(false)
       setSyncStatus('synced')
       return true
-    } catch {
-      setError('Código ou PIN incorreto.')
+    } catch (err) {
+      if (err instanceof CloudSyncError) {
+        if (err.reason === 'not_found') {
+          setError(
+            'Código não encontrado na nuvem. No PC, abra Ajustes e confira se aparece "Sincronizado". Se não, configure o Supabase (.env) e salve algo no cofre para enviar.',
+          )
+        } else if (err.reason === 'not_configured') {
+          setError(
+            'Sincronização na nuvem indisponível neste endereço. Acesse pelo mesmo URL do PC onde o cofre foi criado.',
+          )
+        } else if (err.reason === 'network') {
+          setError('Sem conexão com a nuvem. Verifique internet e tente de novo.')
+        } else {
+          setError(`Erro na nuvem: ${err.message}`)
+        }
+      } else {
+        setError('Não foi possível restaurar o cofre. Verifique código e PIN.')
+      }
       return false
     } finally {
       setIsLoading(false)
@@ -263,7 +311,13 @@ export function useVault(): UseVaultReturn {
         isSetup: true,
       })
       setIsLocked(false)
-      if (isCloudEnabled() && getSyncId()) setSyncStatus('synced')
+      if (isCloudEnabled()) {
+        try {
+          await ensureCloudRegistration(salt)
+        } catch {
+          // dados locais válidos; sync falhou em background
+        }
+      }
       return true
     } catch {
       setError('PIN incorreto.')

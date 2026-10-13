@@ -1,4 +1,4 @@
-import { Film, Tv, Gamepad2, BookOpen, Star, Trash2, Edit2, Trophy } from 'lucide-react'
+import { Film, Tv, Gamepad2, BookOpen, Disc3, Star, Trash2, Edit2, Trophy } from 'lucide-react'
 import type { MediaItem, MediaType } from '../types'
 import { STATUS_LABELS, STATUS_COLORS } from '../types'
 import { formatShortDate } from '../lib/utils'
@@ -15,6 +15,7 @@ export function MediaCard({ item, onEdit, onDelete }: MediaCardProps) {
     series: Tv,
     game: Gamepad2,
     book: BookOpen,
+    album: Disc3,
   }
   const IconComponent = icons[item.type] || Film
 
@@ -23,6 +24,7 @@ export function MediaCard({ item, onEdit, onDelete }: MediaCardProps) {
     series: 'Série',
     game: 'Jogo',
     book: 'Livro',
+    album: 'Álbum',
   }
 
   return (
@@ -82,7 +84,11 @@ export function MediaCard({ item, onEdit, onDelete }: MediaCardProps) {
         <div className="media-meta">
           {item.releaseYear && <span>{item.releaseYear}</span>}
           {item.genre && <span>• {item.genre}</span>}
+          {item.artist && <span>• {item.artist}</span>}
           {item.platform && <span>• {item.platform}</span>}
+          {item.trackCount !== undefined && item.trackCount > 0 && (
+            <span>• {item.trackCount} faixas</span>
+          )}
           {item.hoursPlayed !== undefined && item.hoursPlayed > 0 && (
             <span>• {item.hoursPlayed}h</span>
           )}

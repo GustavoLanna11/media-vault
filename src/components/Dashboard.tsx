@@ -3,6 +3,7 @@ import {
   Tv,
   Gamepad2,
   BookOpen,
+  Disc3,
   Star,
   PlusCircle,
   Clock,
@@ -127,6 +128,13 @@ export function Dashboard({
           >
             <BookOpen size={16} color="var(--amber-400)" />
             + Livro
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => onNavigateTab('add', 'album')}
+          >
+            <Disc3 size={16} color="var(--pink-400, #f472b6)" />
+            + Álbum
           </button>
         </div>
       </div>

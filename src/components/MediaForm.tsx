@@ -4,6 +4,7 @@ import {
   Tv,
   Gamepad2,
   BookOpen,
+  Disc3,
   Star,
   Check,
   Image as ImageIcon,
@@ -71,6 +72,10 @@ export function MediaForm({
   const [totalPages, setTotalPages] = useState(
     initialData?.totalPages !== undefined ? String(initialData.totalPages) : ''
   )
+  const [artist, setArtist] = useState(initialData?.artist || '')
+  const [trackCount, setTrackCount] = useState(
+    initialData?.trackCount !== undefined ? String(initialData.trackCount) : ''
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,6 +102,8 @@ export function MediaForm({
       author: type === 'book' && author.trim() ? author.trim() : undefined,
       pagesRead: type === 'book' && pagesRead ? parseInt(pagesRead, 10) : undefined,
       totalPages: type === 'book' && totalPages ? parseInt(totalPages, 10) : undefined,
+      artist: type === 'album' && artist.trim() ? artist.trim() : undefined,
+      trackCount: type === 'album' && trackCount ? parseInt(trackCount, 10) : undefined,
     })
   }
 
@@ -105,6 +112,7 @@ export function MediaForm({
     series: Tv,
     game: Gamepad2,
     book: BookOpen,
+    album: Disc3,
   }
 
   return (
@@ -147,7 +155,7 @@ export function MediaForm({
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={`Nome do ${type === 'movie' ? 'filme' : type === 'series' ? 'seriado' : type === 'game' ? 'jogo' : 'livro'}`}
+            placeholder={`Nome do ${type === 'movie' ? 'filme' : type === 'series' ? 'seriado' : type === 'game' ? 'jogo' : type === 'album' ? 'álbum' : 'livro'}`}
             autoFocus
           />
         </div>
@@ -360,6 +368,30 @@ export function MediaForm({
                 value={pagesRead}
                 onChange={(e) => setPagesRead(e.target.value)}
                 placeholder="Ex: 320"
+              />
+            </div>
+          </div>
+        )}
+
+        {type === 'album' && (
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Artista / Banda</label>
+              <input
+                type="text"
+                value={artist}
+                onChange={(e) => setArtist(e.target.value)}
+                placeholder="Ex: Radiohead"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Nº de Faixas</label>
+              <input
+                type="number"
+                value={trackCount}
+                onChange={(e) => setTrackCount(e.target.value)}
+                placeholder="Ex: 12"
+                min="1"
               />
             </div>
           </div>

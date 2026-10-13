@@ -1,4 +1,4 @@
-export type MediaType = 'movie' | 'series' | 'game' | 'book'
+export type MediaType = 'movie' | 'series' | 'game' | 'book' | 'album'
 
 export type WatchStatus =
   | 'zerado'
@@ -38,6 +38,9 @@ export interface MediaItem {
   author?: string
   pagesRead?: number
   totalPages?: number
+  // Álbuns
+  artist?: string
+  trackCount?: number
 }
 
 export interface AppState {
@@ -52,6 +55,7 @@ export const MEDIA_TYPES: { id: MediaType; label: string; icon: string }[] = [
   { id: 'series', label: 'Séries', icon: 'Tv' },
   { id: 'game', label: 'Jogos', icon: 'Gamepad2' },
   { id: 'book', label: 'Livros', icon: 'BookOpen' },
+  { id: 'album', label: 'Álbuns', icon: 'Disc3' },
 ]
 
 export const GAME_STATUS_OPTIONS = [
@@ -96,6 +100,7 @@ export const GENRES_BY_TYPE: Record<MediaType, string[]> = {
   series: ['Drama', 'Comédia', 'Ficção Científica', 'Crime / Policial', 'Anime', 'Mistério', 'Fantasia', 'Ação', 'Documentário'],
   game: ['RPG', 'Ação / Aventura', 'FPS / Shooter', 'Mundo Aberto', 'Souls-like', 'Estratégia', 'Plataforma', 'Corrida', 'Esportes', 'Indie', 'Terror / Sobrevivência'],
   book: ['Ficção', 'Fantasia', 'Ficção Científica', 'Desenvolvimento Pessoal', 'Biografia', 'História', 'Tecnologia / Negócios', 'Filosofia'],
+  album: ['Rock', 'Pop', 'Hip-Hop / Rap', 'MPB', 'Jazz', 'Eletrônica', 'Metal', 'Indie', 'R&B / Soul', 'Clássica', 'Reggae', 'Alternativo'],
 }
 
 export const PLATFORMS = [

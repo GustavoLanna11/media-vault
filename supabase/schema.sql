@@ -27,4 +27,8 @@ drop policy if exists "anon_update_media_vaults" on public.media_vaults;
 create policy "anon_update_media_vaults"
   on public.media_vaults for update
   to anon
-  using (true);
+  using (true)
+  with check (true);
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update on public.media_vaults to anon, authenticated;

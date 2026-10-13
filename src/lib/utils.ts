@@ -31,6 +31,7 @@ export interface VaultStats {
   seriesCount: number
   gamesCount: number
   booksCount: number
+  albumsCount: number
   completedCount: number
   inProgressCount: number
   favoritesCount: number
@@ -44,6 +45,7 @@ export function calculateVaultStats(items: MediaItem[] = []): VaultStats {
   let seriesCount = 0
   let gamesCount = 0
   let booksCount = 0
+  let albumsCount = 0
   let completedCount = 0
   let inProgressCount = 0
   let favoritesCount = 0
@@ -59,6 +61,7 @@ export function calculateVaultStats(items: MediaItem[] = []): VaultStats {
       if (item.hoursPlayed) totalHoursPlayed += Number(item.hoursPlayed)
     }
     if (item.type === 'book') booksCount++
+    if (item.type === 'album') albumsCount++
 
     if (item.status === 'concluido' || item.status === 'zerado' || item.status === 'platinado') completedCount++
     if (item.status === 'em_andamento') inProgressCount++
@@ -78,6 +81,7 @@ export function calculateVaultStats(items: MediaItem[] = []): VaultStats {
     seriesCount,
     gamesCount,
     booksCount,
+    albumsCount,
     completedCount,
     inProgressCount,
     favoritesCount,
@@ -149,6 +153,24 @@ export function normalizeAppState(raw: any): AppState {
         notes: g.notes || g.description || undefined,
         createdAt: g.createdAt || new Date().toISOString(),
         updatedAt: g.updatedAt || new Date().toISOString(),
+      })
+    }
+  }
+  if (Array.isArray(raw.albums)) {
+    for (const a of raw.albums) {
+      items.push({
+        id: a.id || generateId(),
+        type: 'album',
+        title: a.title || 'Sem título',
+        artist: a.artist || undefined,
+        status: a.status === 'finished' ? 'concluido' : a.status === 'listening' ? 'em_andamento' : 'planejado',
+        rating: a.rating || 0,
+        coverUrl: a.cover_url || undefined,
+        releaseYear: a.year || undefined,
+        trackCount: a.track_count || undefined,
+        notes: a.notes || a.description || undefined,
+        createdAt: a.createdAt || new Date().toISOString(),
+        updatedAt: a.updatedAt || new Date().toISOString(),
       })
     }
   }

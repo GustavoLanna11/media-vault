@@ -4,9 +4,11 @@ import {
   Film,
   Tv,
   Gamepad2,
+  Disc3,
   PlusCircle,
   Settings as SettingsIcon,
   Lock,
+  Plus,
 } from 'lucide-react'
 import { useVault } from './hooks/useVault'
 import type { MediaType } from './types'
@@ -20,7 +22,7 @@ import { MediaForm } from './components/MediaForm'
 import { Settings } from './components/Settings'
 import './App.css'
 
-type Tab = 'home' | 'movies' | 'series' | 'games' | 'add' | 'settings'
+type Tab = 'home' | 'movies' | 'series' | 'games' | 'albums' | 'add' | 'settings'
 
 export function App() {
   const vault = useVault()
@@ -71,6 +73,7 @@ export function App() {
     movies: 'Filmes',
     series: 'Séries',
     games: 'Jogos',
+    albums: 'Álbuns',
     add: 'Adicionar Experiência',
     settings: 'Ajustes & Acesso',
   }
@@ -80,6 +83,7 @@ export function App() {
     { id: 'movies' as Tab, icon: Film, label: 'Filmes' },
     { id: 'series' as Tab, icon: Tv, label: 'Séries' },
     { id: 'games' as Tab, icon: Gamepad2, label: 'Jogos' },
+    { id: 'albums' as Tab, icon: Disc3, label: 'Álbuns' },
     { id: 'add' as Tab, icon: PlusCircle, label: 'Adicionar' },
     { id: 'settings' as Tab, icon: SettingsIcon, label: 'Ajustes' },
   ]
@@ -91,6 +95,14 @@ export function App() {
       setDefaultMediaType(mediaType)
     }
     setTab(newTab as Tab)
+  }
+
+  const listTabs: Tab[] = ['movies', 'series', 'games', 'albums']
+  const addForCurrentListTab = () => {
+    if (tab === 'movies') handleNavigateTab('add', 'movie')
+    else if (tab === 'series') handleNavigateTab('add', 'series')
+    else if (tab === 'games') handleNavigateTab('add', 'game')
+    else if (tab === 'albums') handleNavigateTab('add', 'album')
   }
 
   return (
@@ -148,6 +160,16 @@ export function App() {
           <header className="app-header">
             <h1>{titles[tab]}</h1>
             <div className="app-header-actions">
+              {listTabs.includes(tab) && (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-header-add"
+                  onClick={addForCurrentListTab}
+                >
+                  <Plus size={16} />
+                  Adicionar
+                </button>
+              )}
               <button className="icon-btn" onClick={vault.lock} aria-label="Bloquear">
                 <Lock size={18} />
               </button>
@@ -194,6 +216,16 @@ export function App() {
               />
             )}
 
+            {tab === 'albums' && (
+              <MediaListView
+                type="album"
+                items={vault.state.items}
+                onUpdate={vault.updateItem}
+                onDelete={vault.deleteItem}
+                onAddNew={() => handleNavigateTab('add', 'album')}
+              />
+            )}
+
             {tab === 'add' && (
               <MediaForm
                 defaultType={defaultMediaType}
@@ -202,6 +234,7 @@ export function App() {
                   if (item.type === 'movie') setTab('movies')
                   else if (item.type === 'series') setTab('series')
                   else if (item.type === 'game') setTab('games')
+                  else if (item.type === 'album') setTab('albums')
                   else setTab('home')
                 }}
               />

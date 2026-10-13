@@ -52,13 +52,36 @@ export function generateSyncId(): string {
 
 export type SyncStatus = "idle" | "syncing" | "synced" | "error" | "offline";
 
+export type CloudSyncFailureReason =
+  | "not_configured"
+  | "not_found"
+  | "network"
+  | "server";
+
+export class CloudSyncError extends Error {
+  reason: CloudSyncFailureReason;
+
+  constructor(message: string, reason: CloudSyncFailureReason) {
+    super(message);
+    this.name = "CloudSyncError";
+    this.reason = reason;
+  }
+}
+
 export async function uploadToCloud(
   syncId: string,
   encryptedPayload: string,
   salt: string,
-): Promise<void> {
+): Promise<string> {
   const supabase = getClient();
-  if (!supabase) return;
+  if (!supabase) {
+    throw new CloudSyncError(
+      "Supabase não configurado neste build (variáveis de ambiente ausentes).",
+      "not_configured",
+    );
+  }
+
+  const updatedAt = new Date().toISOString();
 
   try {
     const { error } = await supabase.from("media_vaults").upsert(
@@ -66,33 +89,59 @@ export async function uploadToCloud(
         sync_id: syncId,
         payload: encryptedPayload,
         salt,
-        updated_at: new Date().toISOString(),
+        updated_at: updatedAt,
       },
       { onConflict: "sync_id" },
     );
 
     if (error) {
-      console.warn("Aviso de sincronização na nuvem:", error.message);
+      throw new CloudSyncError(
+        error.message || "Erro ao enviar cofre para a nuvem.",
+        "server",
+      );
     }
   } catch (err) {
-    console.warn("Falha de rede ao sincronizar na nuvem:", err);
+    if (err instanceof CloudSyncError) throw err;
+    throw new CloudSyncError(
+      "Falha de rede ao sincronizar na nuvem.",
+      "network",
+    );
   }
+
+  return updatedAt;
 }
 
 export async function downloadFromCloud(
   syncId: string,
-): Promise<{ payload: string; salt: string; updatedAt: string } | null> {
+): Promise<{ payload: string; salt: string; updatedAt: string }> {
   const supabase = getClient();
-  if (!supabase) return null;
+  if (!supabase) {
+    throw new CloudSyncError(
+      "Supabase não configurado neste build (variáveis de ambiente ausentes).",
+      "not_configured",
+    );
+  }
 
   try {
     const { data, error } = await supabase
       .from("media_vaults")
       .select("payload, salt, updated_at")
-      .eq("sync_id", syncId)
+      .eq("sync_id", syncId.trim())
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error) {
+      throw new CloudSyncError(
+        error.message || "Erro ao buscar cofre na nuvem.",
+        "server",
+      );
+    }
+
+    if (!data) {
+      throw new CloudSyncError(
+        "Código de sync não encontrado na nuvem.",
+        "not_found",
+      );
+    }
 
     return {
       payload: data.payload,
@@ -100,8 +149,11 @@ export async function downloadFromCloud(
       updatedAt: data.updated_at,
     };
   } catch (err) {
-    console.warn("Falha de rede ao baixar cofre da nuvem:", err);
-    return null;
+    if (err instanceof CloudSyncError) throw err;
+    throw new CloudSyncError(
+      "Falha de rede ao baixar cofre da nuvem.",
+      "network",
+    );
   }
 }
 

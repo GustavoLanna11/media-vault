@@ -47,6 +47,24 @@
   gap: 0.5rem;
 }
 
+.list-view-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .list-view-top-actions {
+    display: none;
+  }
+}
+
+.btn-header-add {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+  min-height: auto;
+}
+
 .app-main {
   flex: 1;
   padding: 1.25rem;
@@ -273,6 +291,10 @@
   }
 
   .app-header-actions {
+    display: flex;
+  }
+
+  .app-header-actions .icon-btn {
     display: none;
   }
 

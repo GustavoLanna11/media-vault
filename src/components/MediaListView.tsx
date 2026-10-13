@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, Plus, Film, Tv, Gamepad2, BookOpen, X } from 'lucide-react'
+import { Search, Plus, Film, Tv, Gamepad2, BookOpen, Disc3, X } from 'lucide-react'
 import type { MediaItem, MediaType, WatchStatus } from '../types'
 import {
   STATUS_LABELS,
@@ -42,7 +42,15 @@ export function MediaListView({
         const matchesGenre = item.genre?.toLowerCase().includes(query)
         const matchesPlatform = item.platform?.toLowerCase().includes(query)
         const matchesDirector = item.director?.toLowerCase().includes(query)
-        if (!matchesTitle && !matchesNotes && !matchesGenre && !matchesPlatform && !matchesDirector) {
+        const matchesArtist = item.artist?.toLowerCase().includes(query)
+        if (
+          !matchesTitle &&
+          !matchesNotes &&
+          !matchesGenre &&
+          !matchesPlatform &&
+          !matchesDirector &&
+          !matchesArtist
+        ) {
           return false
         }
       }
@@ -60,10 +68,19 @@ export function MediaListView({
     series: 'série',
     game: 'jogo',
     book: 'livro',
+    album: 'álbum',
   }
 
   return (
     <div>
+      {onAddNew && (
+        <div className="list-view-top-actions">
+          <button type="button" className="btn btn-primary" onClick={onAddNew}>
+            <Plus size={16} />
+            Adicionar
+          </button>
+        </div>
+      )}
       {/* Modal de Edição */}
       {editingItem && (
         <div className="modal-overlay">
@@ -162,6 +179,8 @@ export function MediaListView({
             <Tv size={44} />
           ) : type === 'game' ? (
             <Gamepad2 size={44} />
+          ) : type === 'album' ? (
+            <Disc3 size={44} />
           ) : (
             <BookOpen size={44} />
           )}
